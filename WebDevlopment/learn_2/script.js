@@ -1,0 +1,1 @@
+alert("Gotta visit your favourite site? say no more");
