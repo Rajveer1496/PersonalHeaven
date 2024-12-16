@@ -22,9 +22,11 @@ printf("\nChoose the currency to convert to:\n\n");
 printf("1.INR\n2.USD\n3.CAD\n4.JPY\n5.EUR\n6.AUD\n7.CHF\n8.GBP\n9.NZD\n10.CNY\n\nChoose Number: ");
 scanf("%d",&c2);
 	
-printf("%0.2f %s = %0.2f %s\n",amount, name[c1-1], convert(amount,currency[1][c1-1],currency[1][c2-1]), name[c2-1]);
+//printf("%0.2f %s = %0.2f %s\n",amount, name[c1-1], convert(amount,currency[1][c1-1],currency[1][c2-1]), name[c2-1]);
+printf("%0.2f %s = %0.2f %s\n",amount, name[c1-1], amount*(currency[1][c1-1])/(currency[1][c2-1]), name[c2-1]);
 }
 
 float convert(float amount,float currency_1,float currency_2){
 	return (amount)*((currency_1)/(currency_2));
 }
+
