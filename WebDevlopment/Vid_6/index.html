@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms and Input Elements</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Forms</h1>
+
+    <form action="post">
+        <div>
+            <label for="username">Enter Your username</label>
+            <input type="text" id="username" name="username" placeholder="Enter Your username">
+        </div>
+
+        <div>
+            <input type="radio" name="gender" id="Male">
+            <label for="gender">Male</label>
+            <input type="radio" name="gender" id="Female">
+            <label for="Female">Female</label>
+        </div>
+
+        <div>
+            <label for="adress">Adress</label>
+            <br>
+            <textarea name="adress" id="adress" cols="30" rows="10" placeholder="Enter your adress here"></textarea>
+        </div>
+
+        <div>
+            <label for="animals">Animal</label>
+            <input type="checkbox" name="animals" id="animals">
+        </div>
+
+        <div>
+            <select name="animals" id="">
+                <option value="cow">cow</option>
+                <option value="goat">goat</option>
+                <option value="donkey">donkey</option>
+            </select>
+        </div>
+    </form>
+    
+
+</body>
+</html>
