@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three-Phase Voltage and Power Plot</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #1e3c72;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            background: rgba(36, 59, 85, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .tab-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .tab-button.active {
+            background: #0056b3;
+        }
+
+        .input-section {
+            display: none;
+        }
+
+        .input-section.active {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 80px;
+            padding: 5px;
+            font-size: 1rem;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            background: #ffffff;
+            color: black;
+        }
+
+        .calculate-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        canvas {
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Three-Phase Voltage & Power Calculation</h1>
+
+        <!-- Tab Buttons -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('balanced')">Balanced Load</button>
+            <button class="tab-button" onclick="switchTab('unbalanced')">Unbalanced Load</button>
+        </div>
+
+        <!-- Balanced Load Input Section -->
+        <div class="input-section active" id="balanced">
+            <div class="input-group">
+                <label>Voltage (V):</label>
+                <input type="number" id="balancedVoltage" step="0.01" value="230">
+            </div>
+            <div class="input-group">
+                <label>Resistance (Ω):</label>
+                <input type="number" id="balancedResistance" step="0.01" value="10">
+            </div>
+            <div class="input-group">
+                <label>Inductance (H):</label>
+                <input type="number" id="balancedInductance" step="0.001" value="0.01">
+            </div>
+            <div class="input-group">
+                <label>Capacitance (F):</label>
+                <input type="number" id="balancedCapacitance" step="0.000001" value="0.0001">
+            </div>
+            <button class="calculate-button" onclick="plotGraphs('balanced')">Calculate</button>
+        </div>
+
+        <!-- Unbalanced Load Input Section -->
+        <div class="input-section" id="unbalanced">
+            <div class="input-group">
+                <label>Voltage R (V):</label>
+                <input type="number" id="voltageR" step="0.01" value="230">
+            </div>
+            <div class="input-group">
+                <label>Voltage Y (V):</label>
+                <input type="number" id="voltageY" step="0.01" value="230">
+            </div>
+            <div class="input-group">
+                <label>Voltage B (V):</label>
+                <input type="number" id="voltageB" step="0.01" value="230">
+            </div>
+            <div class="input-group">
+                <label>Resistance R (Ω):</label>
+                <input type="number" id="resistanceR" step="0.01" value="10">
+            </div>
+            <div class="input-group">
+                <label>Resistance Y (Ω):</label>
+                <input type="number" id="resistanceY" step="0.01" value="10">
+            </div>
+            <div class="input-group">
+                <label>Resistance B (Ω):</label>
+                <input type="number" id="resistanceB" step="0.01" value="10">
+            </div>
+            <button class="calculate-button" onclick="plotGraphs('unbalanced')">Calculate</button>
+        </div>
+
+        <canvas id="voltageChart"></canvas>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            document.querySelectorAll('.input-section').forEach(section => section.classList.remove('active'));
+
+            document.querySelector(`.tab-button[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        function plotGraphs(type) {
+            let voltage = (type === 'balanced') ? parseFloat(document.getElementById('balancedVoltage').value) : parseFloat(document.getElementById('voltageR').value);
+            
+            let data = [];
+            for (let i = 0; i <= 100; i++) {
+                let time = i / 100 * 0.1;
+                data.push(voltage * Math.sin(2 * Math.PI * 50 * time));
+            }
+
+            new Chart(document.getElementById('voltageChart'), {
+                type: 'line',
+                data: { labels: Array.from({length: 101}, (_, i) => (i / 100).toFixed(2)), datasets: [{ label: "Voltage", data, borderColor: "red" }] },
+                options: { scales: { x: { title: { text: "Time (s)", display: true } }, y: { title: { text: "Voltage (V)", display: true } } } }
+            });
+        }
+    </script>
+
+</body>
+</html>

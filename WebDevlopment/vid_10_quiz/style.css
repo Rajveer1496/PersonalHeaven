@@ -1,0 +1,10 @@
+div{
+    border: solid  grey;
+    border-radius: 2%;
+    background-color: bisque;
+}
+
+.outer{
+    border: solid white;
+    background-color: white;
+}

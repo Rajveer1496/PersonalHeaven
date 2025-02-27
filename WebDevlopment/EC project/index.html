@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three-Phase Voltage and Power Plot</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+
+    <style>/* --- Global Styling --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #1e3c72, #2a5298); /* Dark Blue Gradient */
+            color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* --- Container Styling --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(36, 59, 85, 0.9); /* Deep blue-gray with transparency */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); /* Stronger depth effect */
+        }
+        
+        /* --- Title Styling --- */
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        
+        /* --- Input Section Layout --- */
+        .input-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* --- Input Group Styling --- */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1); /* Soft frosted effect */
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2); 
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #f8f9fa;
+        }
+        
+        /* --- Modern Input Fields --- */
+        .input-group input[type="range"],
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #007bff;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8f9fa;
+            transition: border-color 0.3s ease;
+        }
+        
+        /* --- Stylish Reset Button --- */
+        .reset-button {
+            display: block;
+            margin: 20px auto;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease-in-out;
+        }
+        
+        .reset-button:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+        
+        /* --- Charts Styling --- */
+        canvas {
+            margin-top: 30px;
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            color: #f8f9fa;
+            max-width: 800px;
+            margin: 30px auto;
+            background: rgba(36, 59, 85, 0.9);
+            padding: 20px;
+            box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Three-Phase Voltage and Power Plot</h1>
+        <div class="input-section">
+            <div class="input-group">
+                <label for="voltage">Voltage (V):</label>
+                <input type="range" id="voltage" min="1" max="400" step="0.1" value="230" oninput="updatePlot()">
+                <input type="number" id="voltageInput" min="1" max="400" step="0.1" value="230" oninput="updateSlider('voltage')">
+                <span id="voltageValue">230</span>
+            </div>
+            <div class="input-group">
+                <label for="resistance">Resistance (Ω):</label>
+                <input type="range" id="resistance" min="0.1" max="100000" step="0.01" value="10" oninput="updatePlot()">
+                <input type="number" id="resistanceInput" min="0.1" max="100000" step="0.01" value="10" oninput="updateSlider('resistance')">
+                <span id="resistanceValue">10</span>
+            </div>
+            <div class="input-group">
+                <label for="inductance">Inductance (H):</label>
+                <input type="range" id="inductance" min="0.001" max="1" step="0.001" value="0.01" oninput="updatePlot()">
+                <input type="number" id="inductanceInput" min="0.001" max="1" step="0.001" value="0.01" oninput="updateSlider('inductance')">
+                <span id="inductanceValue">0.01</span>
+            </div>
+            <div class="input-group">
+                <label for="capacitance">Capacitance (F):</label>
+                <input type="range" id="capacitance" min="0.000001" max="1" step="0.000001" value="0.0001" oninput="updatePlot()">
+                <input type="number" id="capacitanceInput" min="0.000001" max="1" step="0.000001" value="0.0001" oninput="updateSlider('capacitance')">
+                <span id="capacitanceValue">0.0001</span>
+            </div>
+            <div class="input-group">
+                <label for="time">Time Range (s):</label>
+                <input type="range" id="time" min="0.001" max="0.5" step="0.001" value="0.04" oninput="updatePlot()">
+                <input type="number" id="timeInput" min="0.001" max="0.5" step="0.001" value="0.04" oninput="updateSlider('time')">
+                <span id="timeValue">0.04</span>
+            </div>
+            <div class="input-group">
+                <label for="frequency">Frequency (Hz):</label>
+                <input type="range" id="frequency" min="1" max="100" step="1" value="50" oninput="updatePlot()">
+                <input type="number" id="frequencyInput" min="1" max="100" step="1" value="50" oninput="updateSlider('frequency')">
+                <span id="frequencyValue">50</span>
+            </div>
+        </div>
+
+        <!-- Reset Button -->
+        <button class="reset-button" onclick="resetInputs()">Reset to Default</button>
+
+        <!-- Charts -->
+        <canvas id="voltageChart"></canvas>
+        <canvas id="powerChart"></canvas>
+    </div>
+
+    <footer>
+        <h1>Project by:</h1>
+        <h3>Rajveer Chaudhari - 202411024</h3>
+        <h3>Shubhankar Verma - 202411091</h3>
+        <h3>Tanmay Kaushal - 202411093</h3>
+        <h3>Ansh Parmar - 202411068</h3>
+        <h3>Jash Tanna - 202411046</h3>
+        <h2>Indian Institute of Information Technology Vadodara - International Campus Diu</h2>
+    </footer>
+
+    <script>
+        let voltageChart, powerChart, updateTimeout;
+
+        function updateSlider(id) {
+    let slider = document.getElementById(id);
+    let input = document.getElementById(`${id}Input`);
+
+    // Allow empty input field temporarily
+    if (input.value === "") {
+        return;
+    }
+
+    let value = parseFloat(input.value);
+
+    // Ensure the value is within range before updating the slider
+    if (!isNaN(value) && value >= parseFloat(slider.min) && value <= parseFloat(slider.max)) {
+        slider.value = value;
+        updatePlot();
+    }
+}
+
+
+        function updatePlot() {
+            document.getElementById('voltageValue').textContent = document.getElementById('voltage').value;
+            document.getElementById('resistanceValue').textContent = document.getElementById('resistance').value;
+            document.getElementById('inductanceValue').textContent = document.getElementById('inductance').value;
+            document.getElementById('capacitanceValue').textContent = document.getElementById('capacitance').value;
+            document.getElementById('timeValue').textContent = document.getElementById('time').value;
+            document.getElementById('frequencyValue').textContent = document.getElementById('frequency').value;
+
+            // Sync input boxes with sliders
+            document.getElementById('voltageInput').value = document.getElementById('voltage').value;
+            document.getElementById('resistanceInput').value = document.getElementById('resistance').value;
+            document.getElementById('inductanceInput').value = document.getElementById('inductance').value;
+            document.getElementById('capacitanceInput').value = document.getElementById('capacitance').value;
+            document.getElementById('timeInput').value = document.getElementById('time').value;
+            document.getElementById('frequencyInput').value = document.getElementById('frequency').value;
+
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(plotGraphs, 100); // Debounce to improve performance
+        }
+
+        function plotGraphs() {
+    let voltage = parseFloat(document.getElementById('voltage').value);
+    let resistance = parseFloat(document.getElementById('resistance').value);
+    let inductance = parseFloat(document.getElementById('inductance').value);
+    let capacitance = parseFloat(document.getElementById('capacitance').value);
+    let timeRange = parseFloat(document.getElementById('time').value);
+    let frequency = parseFloat(document.getElementById('frequency').value);
+
+    // Error handling for invalid inputs
+    if (resistance <= 0 || inductance <= 0 || capacitance <= 0 || frequency <= 0) {
+        alert("Resistance, Inductance, Capacitance, and Frequency must be greater than zero.");
+        return;
+    }
+
+    let omega = 2 * Math.PI * frequency; // Angular frequency
+    let XL = omega * inductance; // Inductive reactance
+    let XC = 1 / (omega * capacitance); // Capacitive reactance
+    let Z = Math.sqrt(resistance ** 2 + (XL - XC) ** 2); // Impedance
+    let phi = Math.atan2((XL - XC), resistance); // Phase angle
+
+    let t = []; // Time array
+    let Vr = [], Vy = [], Vb = []; // Voltage arrays
+    let Ir = [], Iy = [], Ib = []; // Current arrays
+    let Pr = [], Py = [], Pb = []; // Power arrays
+
+    let steps = 1000; // Number of points for smoother curves
+    for (let i = 0; i <= steps; i++) {
+        let time = (i / steps) * timeRange;
+        t.push(time);
+
+        // Voltage calculations
+        Vr.push(voltage * Math.sin(omega * time));
+        Vy.push(voltage * Math.sin(omega * time - (2 * Math.PI / 3)));
+        Vb.push(voltage * Math.sin(omega * time - (4 * Math.PI / 3)));
+
+        // Current calculations
+        let I = voltage / Z;
+        Ir.push(I * Math.sin(omega * time - phi));
+        Iy.push(I * Math.sin(omega * time - (2 * Math.PI / 3) - phi));
+        Ib.push(I * Math.sin(omega * time - (4 * Math.PI / 3) - phi));
+
+        // Power calculations
+        Pr.push(Vr[i] * Ir[i]);
+        Py.push(Vy[i] * Iy[i]);
+        Pb.push(Vb[i] * Ib[i]);
+    }
+
+    // Format time labels to 4 decimal places
+    let formattedTimeLabels = t.map(time => parseFloat(time.toFixed(4)));
+
+    // Update Voltage Chart
+    if (voltageChart) voltageChart.destroy();
+    let ctx1 = document.getElementById('voltageChart').getContext('2d');
+    voltageChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: formattedTimeLabels,
+            datasets: [
+                { label: 'Vr (Red Phase)', data: Vr, borderColor: 'red', borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 },
+                { label: 'Vy (Yellow Phase)', data: Vy, borderColor: 'green', borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 },
+                { label: 'Vb (Blue Phase)', data: Vb, borderColor: 'black', borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 }
+            ]
+        },
+        options: {
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Time (s)', color: '#ffffff' },
+                    ticks: { color: '#ffffff' }
+                },
+                y: { 
+                    title: { display: true, text: 'Voltage (V)', color: '#ffffff' },
+                    ticks: { color: '#ffffff' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#ffffff' } }
+            }
+        }
+    });
+
+    // Update Power Chart
+    if (powerChart) powerChart.destroy();
+    let ctx2 = document.getElementById('powerChart').getContext('2d');
+    powerChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: formattedTimeLabels,
+            datasets: [
+                { label: 'Pr (Red Phase)', data: Pr, borderColor: 'red', borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 },
+                { label: 'Py (Yellow Phase)', data: Py, borderColor: 'green', borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 },
+                { label: 'Pb (Blue Phase)', data: Pb, borderColor: 'black', borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 }
+            ]
+        },
+        options: {
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Time (s)', color: '#ffffff' },
+                    ticks: { color: '#ffffff' }
+                },
+                y: { 
+                    title: { display: true, text: 'Power (W)', color: '#ffffff' },
+                    ticks: { color: '#ffffff' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#ffffff' } }
+            }
+        }
+    });
+}
+
+
+        function resetInputs() {
+            document.getElementById('voltage').value = 230;
+            document.getElementById('resistance').value = 10;
+            document.getElementById('inductance').value = 0.01;
+            document.getElementById('capacitance').value = 0.0001;
+            document.getElementById('time').value = 0.04;
+            document.getElementById('frequency').value = 50;
+            updatePlot();
+        }
+
+        window.onload = plotGraphs;
+    </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Three‑Phase Voltage &amp; Power Plot</title>
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+   /* General Styling */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f8f9fa; /* Light Background */
+  color: #000000;
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Main Container */
+.container {
+  display: flex;
+  width: 90%;
+  max-width: 1200px;
+  height: 90vh;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #ddd; /* Light Border */
+}
+
+/* Sections */
+.section {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Input Fields */
+.inputs, .phase-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  background: #f1f1f1;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+input {
+  width: 80px;
+  padding: 5px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: #ffffff;
+  color: black;
+  text-align: center;
+}
+
+/* Buttons */
+button {
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 10px 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease-in-out;
+}
+
+button:hover {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Canvas Styling */
+canvas {
+  background: #f1f1f1;
+  border-radius: 8px;
+  box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left column: Balanced Load -->
+    <div class="section" id="balancedSection">
+      <h2>Balanced Load</h2>
+      <div class="inputs">
+        <label>Voltage (V): 
+          <input type="number" id="b_voltage" step="any" value="230">
+        </label>
+        <label>Resistance (Ω): 
+          <input type="number" id="b_resistance" step="any" value="10">
+        </label>
+        <label>Inductance (H): 
+          <input type="number" id="b_inductance" step="any" value="0.01">
+        </label>
+        <label>Capacitance (F): 
+          <input type="number" id="b_capacitance" step="any" value="0.0001">
+        </label>
+        <label>Time (s): 
+          <input type="number" id="b_time" step="any" value="0.04">
+        </label>
+        <label>Freq (Hz): 
+          <input type="number" id="b_frequency" step="any" value="50">
+        </label>
+        <button onclick="calculateBalanced()">Calculate</button>
+      </div>
+      <!-- Two small canvases for balanced load (voltage and power) -->
+      <canvas id="b_voltageChart" width="300" height="150"></canvas>
+      <canvas id="b_powerChart" width="300" height="150"></canvas>
+    </div>
+
+    <!-- Right column: Unbalanced Load -->
+    <div class="section" id="unbalancedSection">
+      <h2>Unbalanced Load</h2>
+      <div class="inputs">
+        <label>Voltage (V): 
+          <input type="number" id="u_voltage" step="any" value="230">
+        </label>
+        <label>Time (s): 
+          <input type="number" id="u_time" step="any" value="0.04">
+        </label>
+        <label>Freq (Hz): 
+          <input type="number" id="u_frequency" step="any" value="50">
+        </label>
+      </div>
+      <!-- For each phase, allow different load values -->
+      <div class="phase-inputs">
+        <strong>Red Phase:</strong>
+        <label>R (Ω): <input type="number" id="u_Rr" step="any" value="10"></label>
+        <label>L (H): <input type="number" id="u_Lr" step="any" value="0.01"></label>
+        <label>C (F): <input type="number" id="u_Cr" step="any" value="0.0001"></label>
+      </div>
+      <div class="phase-inputs">
+        <strong>Yellow Phase:</strong>
+        <label>R (Ω): <input type="number" id="u_Ry" step="any" value="10"></label>
+        <label>L (H): <input type="number" id="u_Ly" step="any" value="0.01"></label>
+        <label>C (F): <input type="number" id="u_Cy" step="any" value="0.0001"></label>
+      </div>
+      <div class="phase-inputs">
+        <strong>Blue Phase:</strong>
+        <label>R (Ω): <input type="number" id="u_Rb" step="any" value="10"></label>
+        <label>L (H): <input type="number" id="u_Lb" step="any" value="0.01"></label>
+        <label>C (F): <input type="number" id="u_Cb" step="any" value="0.0001"></label>
+      </div>
+      <button onclick="calculateUnbalanced()">Calculate</button>
+      <!-- Two small canvases for unbalanced load (voltage and power) -->
+      <canvas id="u_voltageChart" width="300" height="150"></canvas>
+      <canvas id="u_powerChart" width="300" height="150"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Global chart variables
+    let b_voltageChart, b_powerChart, u_voltageChart, u_powerChart;
+
+    // Function for balanced load calculation and plotting
+    function calculateBalanced() {
+      // Read values (all expected > 0)
+      const voltage = parseFloat(document.getElementById('b_voltage').value);
+      const resistance = parseFloat(document.getElementById('b_resistance').value);
+      const inductance = parseFloat(document.getElementById('b_inductance').value);
+      const capacitance = parseFloat(document.getElementById('b_capacitance').value);
+      const timeRange = parseFloat(document.getElementById('b_time').value);
+      const frequency = parseFloat(document.getElementById('b_frequency').value);
+      if (resistance <= 0 || inductance <= 0 || capacitance <= 0 || frequency <= 0) {
+        alert("R, L, C, and frequency must be > 0.");
+        return;
+      }
+      const omega = 2 * Math.PI * frequency;
+      const XL = omega * inductance;
+      const XC = 1 / (omega * capacitance);
+      const Z = Math.sqrt(resistance**2 + (XL - XC)**2);
+      const phi = Math.atan2((XL - XC), resistance);
+      const steps = 1000;
+      const t = [];
+      const Vr = [], Vy = [], Vb = [];
+      const Pr = [], Py = [], Pb = [];
+      for (let i = 0; i <= steps; i++) {
+        let time = (i/steps) * timeRange;
+        t.push(time.toFixed(4));
+        // Three‑phase voltage (supply is balanced)
+        let v_r = voltage * Math.sin(omega * time);
+        let v_y = voltage * Math.sin(omega * time - (2*Math.PI/3));
+        let v_b = voltage * Math.sin(omega * time - (4*Math.PI/3));
+        Vr.push(v_r);
+        Vy.push(v_y);
+        Vb.push(v_b);
+        // Single load impedance so current magnitude is same in all phases; only phase shift differs
+        let I = voltage / Z;
+        let i_r = I * Math.sin(omega * time - phi);
+        let i_y = I * Math.sin(omega * time - (2*Math.PI/3) - phi);
+        let i_b = I * Math.sin(omega * time - (4*Math.PI/3) - phi);
+        // Instantaneous power per phase
+        Pr.push(v_r * i_r);
+        Py.push(v_y * i_y);
+        Pb.push(v_b * i_b);
+      }
+      // (Re)create the balanced load voltage chart
+      if (b_voltageChart) b_voltageChart.destroy();
+      b_voltageChart = new Chart(document.getElementById('b_voltageChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: t,
+          datasets: [
+            { label: 'Red', data: Vr, borderColor: 'red', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Yellow', data: Vy, borderColor: 'gold', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Blue', data: Vb, borderColor: 'blue', fill: false, pointRadius: 0, tension: 0.4 }
+          ]
+        },
+        options: {
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Voltage (V)' } }
+          }
+        }
+      });
+      // (Re)create the balanced load power chart
+      if (b_powerChart) b_powerChart.destroy();
+      b_powerChart = new Chart(document.getElementById('b_powerChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: t,
+          datasets: [
+            { label: 'Red', data: Pr, borderColor: 'red', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Yellow', data: Py, borderColor: 'gold', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Blue', data: Pb, borderColor: 'blue', fill: false, pointRadius: 0, tension: 0.4 }
+          ]
+        },
+        options: {
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Power (W)' } }
+          }
+        }
+      });
+    }
+
+    // Function for unbalanced load calculation and plotting
+    function calculateUnbalanced() {
+      // Common supply values
+      const voltage = parseFloat(document.getElementById('u_voltage').value);
+      const timeRange = parseFloat(document.getElementById('u_time').value);
+      const frequency = parseFloat(document.getElementById('u_frequency').value);
+      if (frequency <= 0) { alert("Frequency must be > 0."); return; }
+      const omega = 2 * Math.PI * frequency;
+      const steps = 1000;
+      const t = [];
+      const Vr = [], Vy = [], Vb = [];
+      const Pr = [], Py = [], Pb = [];
+      
+      // --- Red Phase load parameters ---
+      const Rr = parseFloat(document.getElementById('u_Rr').value);
+      const Lr = parseFloat(document.getElementById('u_Lr').value);
+      const Cr = parseFloat(document.getElementById('u_Cr').value);
+      if (Rr <= 0 || Lr <= 0 || Cr <= 0) { alert("Red phase parameters must be > 0."); return; }
+      const Xl_r = omega * Lr;
+      const Xc_r = 1 / (omega * Cr);
+      const Zr = Math.sqrt(Rr**2 + (Xl_r - Xc_r)**2);
+      const phi_r = Math.atan2((Xl_r - Xc_r), Rr);
+      
+      // --- Yellow Phase load parameters ---
+      const Ry = parseFloat(document.getElementById('u_Ry').value);
+      const Ly = parseFloat(document.getElementById('u_Ly').value);
+      const Cy = parseFloat(document.getElementById('u_Cy').value);
+      if (Ry <= 0 || Ly <= 0 || Cy <= 0) { alert("Yellow phase parameters must be > 0."); return; }
+      const Xl_y = omega * Ly;
+      const Xc_y = 1 / (omega * Cy);
+      const Zy = Math.sqrt(Ry**2 + (Xl_y - Xc_y)**2);
+      const phi_y = Math.atan2((Xl_y - Xc_y), Ry);
+      
+      // --- Blue Phase load parameters ---
+      const Rb = parseFloat(document.getElementById('u_Rb').value);
+      const Lb = parseFloat(document.getElementById('u_Lb').value);
+      const Cb = parseFloat(document.getElementById('u_Cb').value);
+      if (Rb <= 0 || Lb <= 0 || Cb <= 0) { alert("Blue phase parameters must be > 0."); return; }
+      const Xl_b = omega * Lb;
+      const Xc_b = 1 / (omega * Cb);
+      const Zb = Math.sqrt(Rb**2 + (Xl_b - Xc_b)**2);
+      const phi_b = Math.atan2((Xl_b - Xc_b), Rb);
+      
+      for (let i = 0; i <= steps; i++) {
+        let time = (i/steps) * timeRange;
+        t.push(time.toFixed(4));
+        // The supply voltages remain balanced:
+        let v_r = voltage * Math.sin(omega * time);
+        let v_y = voltage * Math.sin(omega * time - (2*Math.PI/3));
+        let v_b = voltage * Math.sin(omega * time - (4*Math.PI/3));
+        Vr.push(v_r);
+        Vy.push(v_y);
+        Vb.push(v_b);
+        // For each phase the current is computed with its own impedance and phase shift.
+        let I_r = voltage / Zr;
+        let I_y = voltage / Zy;
+        let I_b = voltage / Zb;
+        let i_r = I_r * Math.sin(omega * time - phi_r);
+        let i_y = I_y * Math.sin(omega * time - (2*Math.PI/3) - phi_y);
+        let i_b = I_b * Math.sin(omega * time - (4*Math.PI/3) - phi_b);
+        // Instantaneous power per phase
+        Pr.push(v_r * i_r);
+        Py.push(v_y * i_y);
+        Pb.push(v_b * i_b);
+      }
+      // Create the unbalanced load voltage chart (which will look like the supply waveforms)
+      if (u_voltageChart) u_voltageChart.destroy();
+      u_voltageChart = new Chart(document.getElementById('u_voltageChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: t,
+          datasets: [
+            { label: 'Red', data: Vr, borderColor: 'red', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Yellow', data: Vy, borderColor: 'gold', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Blue', data: Vb, borderColor: 'blue', fill: false, pointRadius: 0, tension: 0.4 }
+          ]
+        },
+        options: {
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Voltage (V)' } }
+          }
+        }
+      });
+      // Create the unbalanced load power chart (here the differences in load are visible)
+      if (u_powerChart) u_powerChart.destroy();
+      u_powerChart = new Chart(document.getElementById('u_powerChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: t,
+          datasets: [
+            { label: 'Red', data: Pr, borderColor: 'red', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Yellow', data: Py, borderColor: 'gold', fill: false, pointRadius: 0, tension: 0.4 },
+            { label: 'Blue', data: Pb, borderColor: 'blue', fill: false, pointRadius: 0, tension: 0.4 }
+          ]
+        },
+        options: {
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Power (W)' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
